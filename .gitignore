@@ -1,4 +1,4 @@
-# Distribution / packaging
+# Python.
 .Python
 env/
 build/
@@ -15,8 +15,14 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+__pycache__/
+.cache/
 
-# Serverless directories
+# JavaScript.
+node_modules/
+
+# Serverless directories.
 .serverless
+
 # App-specific.
 secrets.yml

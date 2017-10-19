@@ -54,9 +54,20 @@ provider:
 #    - exclude-me.py
 #    - exclude-me-dir/**
 
+plugins:
+  - serverless-python-requirements
+
+
 custom:
   stage: ${opt:stage, self:provider.stage}
   secrets: ${file(secrets.yml):${self:custom.stage}}
+
+  pythonRequirements:
+    noDeploy:
+      - pytest
+      - py
+      - virtualenv
+
 
 functions:
   hello:

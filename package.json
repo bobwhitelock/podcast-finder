@@ -1,0 +1,10 @@
+{
+  "name": "podcast-finder",
+  "version": "1.0.0",
+  "author": "Bob Whitelock <bob.whitelock1@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "serverless-python-requirements": "^3.0.7"
+  }
+}
