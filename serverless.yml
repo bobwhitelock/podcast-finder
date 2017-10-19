@@ -20,10 +20,8 @@ service: podcast-finder
 provider:
   name: aws
   runtime: python3.6
+  region: eu-west-2
 
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
   environment:
     AUDIOSEARCH_ID: "${self:custom.secrets.AUDIOSEARCH_ID}"
     AUDIOSEARCH_SECRET: "${self:custom.secrets.AUDIOSEARCH_SECRET}"
@@ -44,9 +42,12 @@ provider:
 #            - "Ref" : "ServerlessDeploymentBucket"
 #            - "/*"
 
+package:
+  include:
+    - functions/handler.py
+  exclude:
+    - ./**
 
-# you can add packaging information here
-#package:
 #  include:
 #    - include-me.py
 #    - include-me-dir/**
@@ -70,8 +71,12 @@ custom:
 
 
 functions:
-  hello:
-    handler: handler.hello
+  search:
+    handler: functions/handler.search
+    events:
+      - http:
+          path: search
+          method: get
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
