@@ -24,6 +24,9 @@ provider:
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
+  environment:
+    AUDIOSEARCH_ID: "${self:custom.secrets.AUDIOSEARCH_ID}"
+    AUDIOSEARCH_SECRET: "${self:custom.secrets.AUDIOSEARCH_SECRET}"
 
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
@@ -41,9 +44,6 @@ provider:
 #            - "Ref" : "ServerlessDeploymentBucket"
 #            - "/*"
 
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
 
 # you can add packaging information here
 #package:
@@ -53,6 +53,10 @@ provider:
 #  exclude:
 #    - exclude-me.py
 #    - exclude-me-dir/**
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  secrets: ${file(secrets.yml):${self:custom.stage}}
 
 functions:
   hello:
