@@ -108,12 +108,22 @@ view model =
             String.isEmpty model.query
                 || RemoteData.isLoading model.results
     in
-    div []
-        [ Html.form [ onSubmit PerformSearch ]
+    div [ class "center mw9 pa4" ]
+        [ Html.form
+            [ onSubmit PerformSearch
+            , class "mw-100 cf pa3"
+            ]
             [ input
-                [ value model.query, onInput ChangeQuery ]
+                [ value model.query
+                , onInput ChangeQuery
+                , class "w-80-l h2 br1"
+                ]
                 []
-            , button [ disabled disableSubmit ] [ text "Go!" ]
+            , button
+                [ disabled disableSubmit
+                , class "mw-2"
+                ]
+                [ text "Go!" ]
             ]
         , viewResults model.results
         ]
@@ -132,7 +142,37 @@ viewResults results =
             div [] [ toString error |> text ]
 
         Success episodes ->
-            div [] [ toString episodes |> text ]
+            viewEpisodes episodes
+
+
+viewEpisodes : List Episode -> Html Msg
+viewEpisodes episodes =
+    div [ class "cf pa2" ] (List.map episodeCard episodes)
+
+
+episodeCard : Episode -> Html Msg
+episodeCard episode =
+    div [ class "fl w-50 w-25-m w-20-l pa2" ]
+        [ a
+            [ class "db link dim tc" ]
+            [ img
+                [ alt (episode.show_title ++ " — " ++ episode.title)
+                , class "w-100 db outline black-10"
+                , src episode.image_url
+                ]
+                []
+            , dl [ class "mt2 f6 lh-copy" ]
+                [ dt [ class "clip" ]
+                    [ text "Show Title" ]
+                , dd [ class "ml0 black truncate w-100" ]
+                    [ text episode.show_title ]
+                , dt [ class "clip" ]
+                    [ text "Episode Title" ]
+                , dd [ class "ml0 gray truncate w-100" ]
+                    [ text episode.title ]
+                ]
+            ]
+        ]
 
 
 
