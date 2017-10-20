@@ -1,11 +1,13 @@
 module Main exposing (..)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Element exposing (..)
+import Element.Events exposing (..)
+import Element.Input as Input
+import Html exposing (Html)
 import Http
 import Json.Decode as D
 import RemoteData exposing (RemoteData(..), WebData)
+import Style
 
 
 ---- MODEL ----
@@ -101,6 +103,10 @@ decodeEpisode =
 ---- VIEW ----
 
 
+type Styles
+    = None
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -108,31 +114,52 @@ view model =
             String.isEmpty model.query
                 || RemoteData.isLoading model.results
     in
-    div []
-        [ Html.form [ onSubmit PerformSearch ]
-            [ input
-                [ value model.query, onInput ChangeQuery ]
+    viewport (Style.styleSheet [])
+        (mainContent
+            None
+            []
+            (column None
                 []
-            , button [ disabled disableSubmit ] [ text "Go!" ]
-            ]
-        , viewResults model.results
-        ]
+                [ search None
+                    []
+                    (row None
+                        []
+                        [ Input.search None
+                            [ onSubmit PerformSearch ]
+                            (Input.Text ChangeQuery
+                                model.query
+                                (Input.placeholder
+                                    { text = "Enter a person or topic..."
+                                    , label = Input.hiddenLabel "Search for a person or topic"
+                                    }
+                                )
+                                [ Input.disabled ]
+                            )
+                        , button None
+                            [ onClick PerformSearch ]
+                            (text "Go!")
+                        ]
+                    )
+                , el None [] (viewResults model.results)
+                ]
+            )
+        )
 
 
-viewResults : WebData (List Episode) -> Html Msg
+viewResults : WebData (List Episode) -> Element Styles variation msg
 viewResults results =
     case results of
         NotAsked ->
-            div [] []
+            el None [] empty
 
         Loading ->
-            div [] [ text "Loading..." ]
+            el None [] (text "Loading...")
 
         Failure error ->
-            div [] [ toString error |> text ]
+            el None [] (toString error |> text)
 
         Success episodes ->
-            div [] [ toString episodes |> text ]
+            el None [] (toString episodes |> text)
 
 
 
