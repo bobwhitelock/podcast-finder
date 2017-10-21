@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Debounce exposing (Debounce)
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -18,8 +19,7 @@ import Time exposing (second)
 type alias Model =
     { query : String
     , debounce : Debounce String
-    , -- XXX Switch to dict?
-      results : WebData (List Episode)
+    , results : Dict String (WebData (List Episode))
     }
 
 
@@ -36,7 +36,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { query = ""
       , debounce = Debounce.init
-      , results = NotAsked
+      , results = Dict.empty
       }
     , Cmd.none
     )
@@ -49,7 +49,7 @@ init =
 type Msg
     = ChangeQuery String
     | PerformSearch
-    | SearchResponse (WebData (List Episode))
+    | SearchResponse String (WebData (List Episode))
     | DebounceMsg Debounce.Msg
 
 
@@ -69,25 +69,44 @@ update msg model =
             )
 
         PerformSearch ->
-            ( { model | results = Loading }
-            , performSearch model.query
-            )
+            let
+                ( shouldSearch, newModel ) =
+                    shouldSearchWithNewModel model model.query
 
-        SearchResponse response ->
-            ( { model | results = response }
+                cmd =
+                    if shouldSearch then
+                        performSearch model.query
+                    else
+                        Cmd.none
+            in
+            ( newModel, cmd )
+
+        SearchResponse query response ->
+            ( { model
+                | results = Dict.insert query response model.results
+              }
             , Cmd.none
             )
 
         DebounceMsg msg ->
             let
-                ( debounce, cmd ) =
+                ( shouldSearch, newModel ) =
+                    shouldSearchWithNewModel model model.query
+
+                cmd =
+                    if shouldSearch then
+                        performSearch
+                    else
+                        \_ -> Cmd.none
+
+                ( debounce, debounceCmd ) =
                     Debounce.update
                         debounceConfig
-                        (Debounce.takeLast performSearch)
+                        (Debounce.takeLast cmd)
                         msg
                         model.debounce
             in
-            { model | debounce = debounce } ! [ cmd ]
+            { newModel | debounce = debounce } ! [ debounceCmd ]
 
 
 debounceConfig : Debounce.Config Msg
@@ -97,14 +116,39 @@ debounceConfig =
     }
 
 
+shouldSearchWithNewModel : Model -> String -> ( Bool, Model )
+shouldSearchWithNewModel model query =
+    if String.isEmpty query then
+        ( False, model )
+    else
+        let
+            existingResults =
+                Dict.get query model.results
+                    |> Maybe.withDefault NotAsked
+
+            ( shouldSearch_, newResultsState ) =
+                if RemoteData.isSuccess existingResults then
+                    ( False, existingResults )
+                else
+                    -- XXX This will cause things to be saved in Dict as
+                    -- Loading even if the request won't be sent due to
+                    -- debouncing - should only set as Loading when sending a
+                    -- request (in debounce case this function is more like
+                    -- `canSearch`).
+                    ( True, Loading )
+        in
+        ( shouldSearch_
+        , { model
+            | results = Dict.insert query newResultsState model.results
+          }
+        )
+
+
 performSearch : String -> Cmd Msg
 performSearch query =
-    if String.isEmpty query then
-        Cmd.none
-    else
-        Http.get (searchUrl query) decodeSearchResults
-            |> RemoteData.sendRequest
-            |> Cmd.map SearchResponse
+    Http.get (searchUrl query) decodeSearchResults
+        |> RemoteData.sendRequest
+        |> Cmd.map (SearchResponse query)
 
 
 searchUrl : String -> String
@@ -138,6 +182,11 @@ decodeEpisode =
 
 view : Model -> Html Msg
 view model =
+    let
+        currentResults =
+            Dict.get model.query model.results
+                |> Maybe.withDefault NotAsked
+    in
     div [ classes [ center, mw9, pa4 ] ]
         [ Html.form
             [ onSubmit PerformSearch
@@ -151,7 +200,7 @@ view model =
                 ]
                 []
             ]
-        , viewResults model.results
+        , viewResults currentResults
         ]
 
 
