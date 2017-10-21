@@ -1,11 +1,13 @@
 module Main exposing (..)
 
+import Debounce exposing (Debounce)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
 import Json.Decode as D
 import RemoteData exposing (RemoteData(..), WebData)
+import Time exposing (second)
 
 
 ---- MODEL ----
@@ -13,6 +15,7 @@ import RemoteData exposing (RemoteData(..), WebData)
 
 type alias Model =
     { query : String
+    , debounce : Debounce String
     , -- XXX Switch to dict?
       results : WebData (List Episode)
     }
@@ -30,6 +33,7 @@ type alias Episode =
 init : ( Model, Cmd Msg )
 init =
     ( { query = ""
+      , debounce = Debounce.init
       , results = NotAsked
       }
     , Cmd.none
@@ -44,14 +48,22 @@ type Msg
     = ChangeQuery String
     | PerformSearch
     | SearchResponse (WebData (List Episode))
+    | DebounceMsg Debounce.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangeQuery newQuery ->
-            ( { model | query = newQuery }
-            , Cmd.none
+            let
+                ( debounce, cmd ) =
+                    Debounce.push debounceConfig newQuery model.debounce
+            in
+            ( { model
+                | query = newQuery
+                , debounce = debounce
+              }
+            , cmd
             )
 
         PerformSearch ->
@@ -64,12 +76,33 @@ update msg model =
             , Cmd.none
             )
 
+        DebounceMsg msg ->
+            let
+                ( debounce, cmd ) =
+                    Debounce.update
+                        debounceConfig
+                        (Debounce.takeLast performSearch)
+                        msg
+                        model.debounce
+            in
+            { model | debounce = debounce } ! [ cmd ]
+
+
+debounceConfig : Debounce.Config Msg
+debounceConfig =
+    { strategy = Debounce.later (0.5 * second)
+    , transform = DebounceMsg
+    }
+
 
 performSearch : String -> Cmd Msg
 performSearch query =
-    Http.get (searchUrl query) decodeSearchResults
-        |> RemoteData.sendRequest
-        |> Cmd.map SearchResponse
+    if String.isEmpty query then
+        Cmd.none
+    else
+        Http.get (searchUrl query) decodeSearchResults
+            |> RemoteData.sendRequest
+            |> Cmd.map SearchResponse
 
 
 searchUrl : String -> String
@@ -103,11 +136,6 @@ decodeEpisode =
 
 view : Model -> Html Msg
 view model =
-    let
-        disableSubmit =
-            String.isEmpty model.query
-                || RemoteData.isLoading model.results
-    in
     div [ class "center mw9 pa4" ]
         [ Html.form
             [ onSubmit PerformSearch
@@ -115,15 +143,11 @@ view model =
             ]
             [ input
                 [ value model.query
+                , placeholder "Search for a person or topic..."
                 , onInput ChangeQuery
-                , class "w-80-l h2 br1"
+                , class "w-100 h2 br1"
                 ]
                 []
-            , button
-                [ disabled disableSubmit
-                , class "mw-2"
-                ]
-                [ text "Go!" ]
             ]
         , viewResults model.results
         ]
