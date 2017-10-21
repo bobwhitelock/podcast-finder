@@ -7,6 +7,8 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode as D
 import RemoteData exposing (RemoteData(..), WebData)
+import Tachyons exposing (..)
+import Tachyons.Classes as T exposing (..)
 import Time exposing (second)
 
 
@@ -136,16 +138,16 @@ decodeEpisode =
 
 view : Model -> Html Msg
 view model =
-    div [ class "center mw9 pa4" ]
+    div [ classes [ center, mw9, pa4 ] ]
         [ Html.form
             [ onSubmit PerformSearch
-            , class "mw-100 cf pa3"
+            , classes [ mw_100, cf, pa3 ]
             ]
             [ input
                 [ value model.query
                 , placeholder "Search for a person or topic..."
                 , onInput ChangeQuery
-                , class "w-100 h2 br1"
+                , classes [ w_100, T.h2, br1 ]
                 ]
                 []
             ]
@@ -171,28 +173,30 @@ viewResults results =
 
 viewEpisodes : List Episode -> Html Msg
 viewEpisodes episodes =
-    div [ class "cf pa2" ] (List.map episodeCard episodes)
+    div
+        [ classes [ cf, pa2 ] ]
+        (List.map episodeCard episodes)
 
 
 episodeCard : Episode -> Html Msg
 episodeCard episode =
-    div [ class "fl w-50 w-25-m w-20-l pa2" ]
+    div [ classes [ fl, w_50, w_25_m, w_20_l, pa2 ] ]
         [ a
-            [ class "db link dim tc" ]
+            [ classes [ db, link, dim, tc ] ]
             [ img
                 [ alt (episode.show_title ++ " — " ++ episode.title)
-                , class "w-100 db outline black-10"
+                , classes [ w_100, db, outline, black_10 ]
                 , src episode.image_url
                 ]
                 []
-            , dl [ class "mt2 f6 lh-copy" ]
-                [ dt [ class "clip" ]
+            , dl [ classes [ mt2, f6, lh_copy ] ]
+                [ Html.dt [ classes [ clip ] ]
                     [ text "Show Title" ]
-                , dd [ class "ml0 black truncate w-100" ]
+                , dd [ classes [ ml0, black, w_100 ] ]
                     [ text episode.show_title ]
-                , dt [ class "clip" ]
+                , Html.dt [ classes [ clip ] ]
                     [ text "Episode Title" ]
-                , dd [ class "ml0 gray truncate w-100" ]
+                , dd [ classes [ ml0, gray, w_100 ] ]
                     [ text episode.title ]
                 ]
             ]
