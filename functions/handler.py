@@ -14,17 +14,8 @@ def search(event, _context):
             'body': ''
         }
 
-    audiosearch_client = audiosearch.Client(
-        os.environ['AUDIOSEARCH_ID'],
-        os.environ['AUDIOSEARCH_SECRET']
-    )
-
-    search_results = audiosearch_client.search(
-        {'q': query, 'from': 0, 'size': 20}, 'episodes'
-    )['results']
-
     body = {
-        'results': search_results,
+        'results': perform_search(query),
     }
 
     response = {
@@ -33,3 +24,14 @@ def search(event, _context):
     }
 
     return response
+
+
+def perform_search(query):
+    audiosearch_client = audiosearch.Client(
+        os.environ['AUDIOSEARCH_ID'],
+        os.environ['AUDIOSEARCH_SECRET']
+    )
+
+    return audiosearch_client.search(
+        {'q': query, 'from': 0, 'size': 20}, 'episodes'
+    )['results']
