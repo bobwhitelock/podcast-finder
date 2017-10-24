@@ -10,6 +10,7 @@ import Json.Decode as D
 import RemoteData exposing (RemoteData(..), WebData)
 import Tachyons exposing (..)
 import Tachyons.Classes as T exposing (..)
+import Task
 import Time exposing (second)
 
 
@@ -49,6 +50,7 @@ init =
 type Msg
     = ChangeQuery String
     | PerformSearch
+    | SearchStarted String
     | SearchResponse String (WebData (List Episode))
     | DebounceMsg Debounce.Msg
 
@@ -70,16 +72,20 @@ update msg model =
 
         PerformSearch ->
             let
-                ( shouldSearch, newModel ) =
-                    shouldSearchWithNewModel model model.query
-
                 cmd =
-                    if shouldSearch then
+                    if shouldSearch model model.query then
                         performSearch model.query
                     else
                         Cmd.none
             in
-            ( newModel, cmd )
+            ( model, cmd )
+
+        SearchStarted query ->
+            ( { model
+                | results = Dict.insert query Loading model.results
+              }
+            , Cmd.none
+            )
 
         SearchResponse query response ->
             ( { model
@@ -90,14 +96,12 @@ update msg model =
 
         DebounceMsg msg ->
             let
-                ( shouldSearch, newModel ) =
-                    shouldSearchWithNewModel model model.query
-
                 cmd =
-                    if shouldSearch then
-                        performSearch
-                    else
-                        \_ -> Cmd.none
+                    \query ->
+                        if shouldSearch model query then
+                            performSearch query
+                        else
+                            Cmd.none
 
                 ( debounce, debounceCmd ) =
                     Debounce.update
@@ -106,7 +110,7 @@ update msg model =
                         msg
                         model.debounce
             in
-            { newModel | debounce = debounce } ! [ debounceCmd ]
+            { model | debounce = debounce } ! [ debounceCmd ]
 
 
 debounceConfig : Debounce.Config Msg
@@ -116,39 +120,39 @@ debounceConfig =
     }
 
 
-shouldSearchWithNewModel : Model -> String -> ( Bool, Model )
-shouldSearchWithNewModel model query =
+shouldSearch : Model -> String -> Bool
+shouldSearch model query =
     if String.isEmpty query then
-        ( False, model )
+        False
     else
-        let
-            existingResults =
-                Dict.get query model.results
-                    |> Maybe.withDefault NotAsked
-
-            ( shouldSearch_, newResultsState ) =
-                if RemoteData.isSuccess existingResults then
-                    ( False, existingResults )
-                else
-                    -- XXX This will cause things to be saved in Dict as
-                    -- Loading even if the request won't be sent due to
-                    -- debouncing - should only set as Loading when sending a
-                    -- request (in debounce case this function is more like
-                    -- `canSearch`).
-                    ( True, Loading )
-        in
-        ( shouldSearch_
-        , { model
-            | results = Dict.insert query newResultsState model.results
-          }
-        )
+        Dict.get query model.results
+            |> Maybe.withDefault NotAsked
+            |> (\existingQueryResult ->
+                    RemoteData.isNotAsked existingQueryResult
+                        || RemoteData.isFailure existingQueryResult
+               )
 
 
 performSearch : String -> Cmd Msg
 performSearch query =
-    Http.get (searchUrl query) decodeSearchResults
-        |> RemoteData.sendRequest
-        |> Cmd.map (SearchResponse query)
+    Cmd.batch
+        [ Http.get (searchUrl query) decodeSearchResults
+            |> RemoteData.sendRequest
+            |> Cmd.map (SearchResponse query)
+        , -- XXX Better way to do this? Need to update the model to indicate a
+          -- search has started, but cannot do this when search started from
+          -- debounce as `Debounce.update` cannot update the overall model, and
+          -- we don't know if a search will actually occur until that runs. But
+          -- this is usually a bad idea (e.g. see
+          -- https://medium.com/elm-shorts/how-to-turn-a-msg-into-a-cmd-msg-in-elm-5dd095175d84).
+          send (SearchStarted query)
+        ]
+
+
+send : msg -> Cmd msg
+send msg =
+    Task.succeed msg
+        |> Task.perform identity
 
 
 searchUrl : String -> String
