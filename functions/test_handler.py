@@ -36,7 +36,6 @@ def test_search_without_query():
 
     event = {
         'queryStringParameters': None
-
     }
 
     response = handler.search(event, None)
