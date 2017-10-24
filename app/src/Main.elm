@@ -226,9 +226,14 @@ viewResults results =
 
 viewEpisodes : List Episode -> Html Msg
 viewEpisodes episodes =
-    div
-        [ classes [ cf, pa2 ] ]
-        (List.map episodeCard episodes)
+    let
+        children =
+            if List.isEmpty episodes then
+                [ em [] [ text "No Results Found" ] ]
+            else
+                List.map episodeCard episodes
+    in
+    div [ classes [ cf, pa2 ] ] children
 
 
 episodeCard : Episode -> Html Msg
