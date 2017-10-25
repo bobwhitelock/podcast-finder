@@ -2,6 +2,7 @@
 import json
 import os
 import yaml
+from unittest.mock import MagicMock
 
 import handler
 
@@ -62,3 +63,35 @@ def load_environment():
 
     for var, value in secrets:
         os.environ[var] = value
+
+
+# Unit-y tests (shouldn't attempt to make AudioSearch API requests).
+
+def test_search_wraps_query_in_quotes(mocker):
+    """So only get exact matches for query"""
+    mocker.patch('handler.perform_search',
+                 MagicMock(return_value={'results': []})
+                 )
+
+    query = 'some person'
+    event = {
+        'queryStringParameters': {'query': query}
+    }
+    handler.search(event, None)
+
+    handler.perform_search.assert_called_once_with('"some person"')
+
+
+def test_search_strips_other_double_quotes(mocker):
+    """These cause AudioSearch API to give 500 error"""
+    mocker.patch('handler.perform_search',
+                 MagicMock(return_value={'results': []})
+                 )
+
+    query = 'some person"'
+    event = {
+        'queryStringParameters': {'query': query}
+    }
+    handler.search(event, None)
+
+    handler.perform_search.assert_called_once_with('"some person"')

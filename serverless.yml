@@ -65,9 +65,24 @@ custom:
 
   pythonRequirements:
     noDeploy:
-      - pytest
+      - Pygments
+      - decorator
+      - ipython
+      - ipython-genutils
+      - jedi
+      - parso
+      - pexpect
+      - pickleshare
+      - prompt-toolkit
+      - ptyprocess
       - py
+      - pytest
+      - pytest-mock
+      - simplegeneric
+      - six
+      - traitlets
       - virtualenv
+      - wcwidth
 
 
 functions:

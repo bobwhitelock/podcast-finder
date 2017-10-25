@@ -14,8 +14,12 @@ def search(event, _context):
             'body': ''
         }
 
+    normalized_query = '"{}"'.format(
+        query.replace('"', '')
+    )
+    search_response = perform_search(normalized_query)
     body = {
-        'results': perform_search(query),
+        'results': search_response['results'],
     }
 
     response = {
@@ -34,4 +38,4 @@ def perform_search(query):
 
     return audiosearch_client.search(
         {'q': query, 'from': 0, 'size': 20}, 'episodes'
-    )['results']
+    )
