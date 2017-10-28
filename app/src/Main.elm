@@ -27,6 +27,7 @@ type alias Model =
 type alias Episode =
     { title : String
     , showTitle : String
+    , description : Maybe String
     , date : String
     , playerUrl : String
     , imageUrl : String
@@ -172,9 +173,10 @@ searchResultsDecoder =
 
 episodeDecoder : D.Decoder Episode
 episodeDecoder =
-    D.map5 Episode
+    D.map6 Episode
         (D.field "title" D.string)
         (D.field "show_title" D.string)
+        (D.maybe (D.field "description" D.string))
         (D.field "date_created" D.string)
         (D.at [ "urls", "ui" ] D.string)
         (D.at [ "image_urls", "full" ] D.string)
