@@ -44,7 +44,7 @@ provider:
 
 package:
   include:
-    - functions/handler.py
+    - functions/search.py
   exclude:
     - ./**
 
@@ -87,7 +87,7 @@ custom:
 
 functions:
   search:
-    handler: functions/handler.search
+    handler: functions/search.main
     events:
       - http:
           path: search

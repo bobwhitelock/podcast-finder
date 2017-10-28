@@ -5,7 +5,7 @@ import json
 import os
 
 
-def search(event, _context):
+def main(event, _context):
     params = event['queryStringParameters']
     query = params and params.get('query')
     if not query:
