@@ -240,7 +240,10 @@ episodeCard : Episode -> Html Msg
 episodeCard episode =
     div [ classes [ fl, w_50, w_25_m, w_20_l, pa2 ] ]
         [ a
-            [ classes [ db, link, dim, tc ] ]
+            [ href episode.playerUrl
+            , target "_blank"
+            , classes [ db, link, dim, tc ]
+            ]
             [ img
                 [ alt (episode.showTitle ++ " — " ++ episode.title)
                 , classes [ w_100, db, outline, black_10 ]
@@ -253,9 +256,13 @@ episodeCard episode =
                 , dd [ classes [ ml0, black, w_100 ] ]
                     [ text episode.showTitle ]
                 , Html.dt [ classes [ clip ] ]
-                    [ text "Episode Title" ]
+                    [ text "Episode Date and Title" ]
                 , dd [ classes [ ml0, gray, w_100 ] ]
-                    [ text episode.title ]
+                    [ span []
+                        [ em [ classes [ pr2 ] ] [ text episode.date ]
+                        , text episode.title
+                        ]
+                    ]
                 ]
             ]
         ]
