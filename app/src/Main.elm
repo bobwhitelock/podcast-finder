@@ -26,10 +26,10 @@ type alias Model =
 
 type alias Episode =
     { title : String
-    , show_title : String
+    , showTitle : String
     , date : String
-    , player_url : String
-    , image_url : String
+    , playerUrl : String
+    , imageUrl : String
     }
 
 
@@ -242,16 +242,16 @@ episodeCard episode =
         [ a
             [ classes [ db, link, dim, tc ] ]
             [ img
-                [ alt (episode.show_title ++ " — " ++ episode.title)
+                [ alt (episode.showTitle ++ " — " ++ episode.title)
                 , classes [ w_100, db, outline, black_10 ]
-                , src episode.image_url
+                , src episode.imageUrl
                 ]
                 []
             , dl [ classes [ mt2, f6, lh_copy ] ]
                 [ Html.dt [ classes [ clip ] ]
                     [ text "Show Title" ]
                 , dd [ classes [ ml0, black, w_100 ] ]
-                    [ text episode.show_title ]
+                    [ text episode.showTitle ]
                 , Html.dt [ classes [ clip ] ]
                     [ text "Episode Title" ]
                 , dd [ classes [ ml0, gray, w_100 ] ]
