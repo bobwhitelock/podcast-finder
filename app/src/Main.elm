@@ -136,7 +136,7 @@ shouldSearch model query =
 performSearch : String -> Cmd Msg
 performSearch query =
     Cmd.batch
-        [ Http.get (searchUrl query) decodeSearchResults
+        [ Http.get (searchUrl query) searchResultsDecoder
             |> RemoteData.sendRequest
             |> Cmd.map (SearchResponse query)
         , -- XXX Better way to do this? Need to update the model to indicate a
@@ -165,13 +165,13 @@ searchEndpoint =
     "/dev/search"
 
 
-decodeSearchResults : D.Decoder (List Episode)
-decodeSearchResults =
-    D.field "results" (D.list decodeEpisode)
+searchResultsDecoder : D.Decoder (List Episode)
+searchResultsDecoder =
+    D.field "results" (D.list episodeDecoder)
 
 
-decodeEpisode : D.Decoder Episode
-decodeEpisode =
+episodeDecoder : D.Decoder Episode
+episodeDecoder =
     D.map5 Episode
         (D.field "title" D.string)
         (D.field "show_title" D.string)
