@@ -1,8 +1,9 @@
 
+from datetime import datetime
+from unittest.mock import MagicMock
 import json
 import os
 import yaml
-from unittest.mock import MagicMock
 
 import handler
 
@@ -20,16 +21,20 @@ def test_search():
     assert response['statusCode'] == 200
 
     body = json.loads(response['body'])
-    show_titles = [
-        episode['show_title'].lower()
-        for episode in body['results']
-    ]
-
-    assert len(show_titles) == 20
+    episodes = body['results']
+    assert len(episodes) == 20
 
     # This podcast title should appear at least once.
     expected_show_title = 'intercepted'
+    show_titles = [episode['show_title'].lower() for episode in episodes]
     assert any([expected_show_title in title for title in show_titles])
+
+    episodes_with_newest_first = sorted(
+        episodes,
+        key=lambda e: datetime.strptime(e['date_created'], '%Y-%m-%d'),
+        reverse=True
+    )
+    assert episodes == episodes_with_newest_first
 
 
 def test_search_without_query():

@@ -36,6 +36,11 @@ def perform_search(query):
         os.environ['AUDIOSEARCH_SECRET']
     )
 
-    return audiosearch_client.search(
-        {'q': query, 'from': 0, 'size': 20}, 'episodes'
-    )
+    sort_by = 'date_broadcast desc'
+    search_params = {
+        'q': query,
+        's': sort_by,
+        'from': 0,
+        'size': 20
+    }
+    return audiosearch_client.search(search_params, 'episodes')
