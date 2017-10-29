@@ -59,12 +59,19 @@ package:
 #    - exclude-me-dir/**
 
 plugins:
+  - serverless-domain-manager
   - serverless-python-requirements
 
 
 custom:
   stage: ${opt:stage, self:provider.stage}
   secrets: ${file(secrets.yml):${self:custom.stage}}
+
+  customDomain:
+    domainName: api.podcast-finder.bobwhitelock.co.uk
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: true
 
   pythonRequirements:
     noDeploy:
