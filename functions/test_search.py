@@ -2,14 +2,13 @@
 from datetime import datetime
 from unittest.mock import MagicMock
 import json
-import os
-import yaml
 
 import search
+import testing_utils
 
 
 def test_gives_correct_results():
-    load_environment()
+    testing_utils.load_environment()
 
     query = 'jeremy scahill'
     event = {
@@ -38,7 +37,7 @@ def test_gives_correct_results():
 
 
 def test_without_query():
-    load_environment()
+    testing_utils.load_environment()
 
     event = {
         'queryStringParameters': None
@@ -50,7 +49,7 @@ def test_without_query():
 
 
 def test_with_bad_query():
-    load_environment()
+    testing_utils.load_environment()
 
     event = {
         'queryStringParameters': {'foo': 'bar'}
@@ -59,15 +58,6 @@ def test_with_bad_query():
     response = search.main(event, None)
     assert response['statusCode'] == 400
     assert response['body'] == ''
-
-
-def load_environment():
-    stage = 'dev'
-    with open('secrets.yml') as f:
-        secrets = yaml.load(f)[stage].items()
-
-    for var, value in secrets:
-        os.environ[var] = value
 
 
 # Unit-y tests (shouldn't attempt to make AudioSearch API requests).
