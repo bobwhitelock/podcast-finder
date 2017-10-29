@@ -25,6 +25,8 @@ provider:
   environment:
     AUDIOSEARCH_ID: "${self:custom.secrets.AUDIOSEARCH_ID}"
     AUDIOSEARCH_SECRET: "${self:custom.secrets.AUDIOSEARCH_SECRET}"
+    EMAIL_SEND_ADDRESS: "${self:custom.secrets.EMAIL_SEND_ADDRESS}"
+    API_DOMAIN_NAME: "${self:custom.secrets.API_DOMAIN_NAME}"
 
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
@@ -45,6 +47,7 @@ provider:
 package:
   include:
     - functions/search.py
+    - functions/request_notification.py
   exclude:
     - ./**
 
@@ -65,25 +68,45 @@ custom:
 
   pythonRequirements:
     noDeploy:
+      - Jinja2
+      - MarkupSafe
       - Pygments
+      - Werkzeug
+      - asn1crypto
+      - aws-xray-sdk
+      - boto
+      - cffi
+      - cookies
+      - cryptography
       - decorator
+      - docker
+      - docker-pycreds
       - ipython
       - ipython-genutils
       - jedi
+      - jsonpickle
+      - mock
+      - moto
       - parso
+      - pbr
       - pexpect
       - pickleshare
       - prompt-toolkit
       - ptyprocess
       - py
+      - pyaml
+      - pycparser
       - pytest
       - pytest-mock
+      - pytz
       - simplegeneric
       - six
       - traitlets
       - virtualenv
       - wcwidth
-
+      - websocket-client
+      - wrapt
+      - xmltodict
 
 functions:
   search:
@@ -92,6 +115,14 @@ functions:
       - http:
           path: search
           method: get
+          cors: true
+
+  request_notification:
+    handler: functions/request_notification.main
+    events:
+      - http:
+          path: request-notification
+          method: post
           cors: true
 
 #    The following are a few example events you can configure
